@@ -1,0 +1,9 @@
+e -f
+i Monto=1 Cliente=a Fecha=1/1/2021 Producto=z
+f
+f cat
+f cat>
+f cat>1
+f >1
+f 1
+f -v
