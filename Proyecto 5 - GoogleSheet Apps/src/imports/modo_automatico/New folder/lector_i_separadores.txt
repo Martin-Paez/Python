@@ -1,0 +1,6 @@
+h -d -f Prueba
+i Monto=1 Cliente=a Fecha=1/1/2021 Producto>z
+i Monto=1 Cliente=a Fecha=1/1/2021 Producto-z
+i Monto=1 Cliente=a Fecha=1/1/2021 Producto z
+i Monto=1 Cliente=a Fecha  =  1/1/2021 Producto=z
+v

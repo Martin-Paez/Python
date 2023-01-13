@@ -1,0 +1,2 @@
+instalar Calculadora
+ejecutar Calculadora
