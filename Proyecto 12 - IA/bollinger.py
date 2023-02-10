@@ -29,6 +29,8 @@ def b_bands(df,n):
     b2 = MA - (MSD*2)
     B2 = pd.Series(b2, name = 'Bb_' + str(n))
     df = df.join(B2)
+    MA = pd.Series(MA, name = 'MM_' + str(n))
+    df = df.join(MA)
     return df
 
 #Calcular a 56hs

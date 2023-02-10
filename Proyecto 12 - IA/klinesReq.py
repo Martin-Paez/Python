@@ -6,6 +6,8 @@ import sqlalchemy as sql
 import time
 from datetime import datetime,timedelta
 
+# Para sumar nuevas velas a la base de datos descomentar test() en la ultima 
+# linea. Si se usa test(True) se borran y cargan desde cero los datos.
 
 class KlinesClient:
             
@@ -32,7 +34,7 @@ class KlinesClient:
         if override:
             self._db.dropTable()
         self._db.createTable()
-        minBD = self._db.oldest()
+        minBD = self._db.recent()
         while True:
             df = self._reqKlines(first=minBD)
             minDf = df.oldest()
@@ -81,7 +83,9 @@ class KlineDF:
         self._delCol('Taker_buy_base')
         self._delCol('Taker_buy_quote')
         self._delCol('_Ignore')
-        
+        cols = self._df.select_dtypes(exclude='datetime').columns
+        self._df[cols] = self._df[cols].apply(pd.to_numeric, errors='coerce')
+
     def _toDatetime(self, key):
         self._df[key] = pd.to_datetime(self._df[key], unit='ms')
         
@@ -148,7 +152,7 @@ class KlinesDB:
             
     def dropTable(self):
         with self._sql.connect() as connection:
-            connection.execute(f'drop table {self._table};')
+            connection.execute(f'drop table {self._name};')
         
     def insert(self, kdf):
         kdf.dataFrame().to_sql(
@@ -160,7 +164,12 @@ class KlinesDB:
         
     def read(self):
         q = 'select * from ' + self._name
-        return pd.read_sql(q,self._sql)
+        df = pd.read_sql(q,self._sql)
+        df['Open_Time'] = pd.to_datetime(df['Open_Time'])
+        df['Close_Time'] = pd.to_datetime(df['Close_Time'])
+        cols = df.select_dtypes(exclude='datetime').columns
+        df[cols] = df[cols].apply(pd.to_numeric, errors='coerce')
+        return df
 
 """
    
@@ -187,7 +196,7 @@ class KlinesDB:
    
 """
 
-def test():    
-    KlinesClient.new('BTCUSDT', '4h')
+def test(override = False):    
+    KlinesClient.new('BTCUSDT', '4h', override)
 
 #test()

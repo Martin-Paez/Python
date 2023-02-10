@@ -1,5 +1,6 @@
 import time
 import paho.mqtt.client as mqtt
+import random
 
 from getpass import getpass
 # pip3 install mysql-connector-python
@@ -9,6 +10,7 @@ from mysql.connector import connect, Error
 sqlIP = "192.168.0.15";
 emqxIP = sqlIP;
 sql = None
+sqlCursor = None;
 try:
     sql = connect(
         host=sqlIP,
@@ -16,9 +18,10 @@ try:
         password="1234",
         database="iot"
     )
+    sqlCursor = sql.cursor();
 except Error as e:
     print(e)
-
+  
 def on_connect(client, userdata, flags, rc):
     print('Conectado. Codigo: '+str(rc))
     client.connected_flag = rc == 0
@@ -27,8 +30,8 @@ def on_connect(client, userdata, flags, rc):
         
 def on_message(client, userdata, msg):
     msg.payload = msg.payload.decode("utf-8")
-    print("Topico: " + msg.topic + " | Payload: " + str(msg.payload))
-    sql.cursor().execute("insert into ldr values(" + str(msg.payload) + "," + str(msg.timestamp) + ")" )
+    print("Subscripci.: Topico = " + msg.topic + ", Payload = " + str(msg.payload))
+    sqlCursor.execute("insert into ldr values(" + str(msg.timestamp) + "," + str(msg.payload) + ")" )
     sql.commit()
 
 def on_disconnect(client, userdata,rc=0):
@@ -52,15 +55,26 @@ def initClient(name):
     return client
 
 observer = initClient("observer")
-observer.subscribe('ldr/intensidad')
+observer.subscribe('ldr')
 
 observable = initClient("observable")
-for i in range(10):
-    observable.publish('ldr/intensidad',str(i))
+for i in range(50):
+    observable.publish('ldr', random.random() * 100) 
+    print("Publicacio.: Topico = ldr")
     time.sleep(0.1)
     observable.loop()
 
 observable.loop_stop()
 observer.disconnect()
+
+print("SELECT val, time FROM ldr; : ");
+
+sqlCursor.execute("SELECT val, timestamp FROM ldr ")
+
+for (val, timestamp) in sqlCursor:
+    print(f'( {timestamp}, {val} )')
+        
+sqlCursor.close()
+sql.close()  
 
 print("Fin del programa")
